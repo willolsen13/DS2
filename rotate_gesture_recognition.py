@@ -8,60 +8,73 @@ from mediapipe.framework.formats import landmark_pb2
 
 import pyautogui
 
-# Path to the gesture recognition model
-model_path = "gesture_recognizer.task"  # Update this to the correct path where the model is saved, if not in current directory
+import custom_gestures
 
-# Initialize the Gesture Recognizer
-options = GestureRecognizerOptions(
-    base_options=BaseOptions(model_asset_path=model_path),
-    num_hands=1
-)
-gesture_recognizer = GestureRecognizer.create_from_options(options)
+mp_drawing = mp.solutions.drawing_utils
+mp_hands = mp.solutions.hands
 
 def main():
     # Initialize video capture
     cap = cv2.VideoCapture(0)  # 0 is the default webcam
 
-    while cap.isOpened():
-        success, image = cap.read()
-        if not success:
-            print("Ignoring empty camera frame.")
-            continue
+    with mp_hands.Hands(
+        static_image_mode=False,
+        max_num_hands=2,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5
+    ) as hands:
 
-        # Flip the image horizontally and convert the BGR image to RGB.
-        image = cv2.flip(image, 1)
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        while cap.isOpened():
+            success, image = cap.read()
+            if not success:
+                print("Ignoring empty camera frame.")
+                continue
 
-        # Convert the image to a Mediapipe Image object for the gesture recognizer
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
+            # Flip the image horizontally and convert the BGR image to RGB.
+            image = cv2.flip(image, 1)
+            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Perform gesture recognition on the image
-        result = gesture_recognizer.recognize(mp_image)
+            # To improve performance, optionally mark the image as not writeable to pass by reference.
+            image_rgb.flags.writeable = False
+            results = hands.process(image_rgb)
 
-        # Draw the gesture recognition results on the image
-        if result.gestures:
-            recognized_gesture = result.gestures[0][0].category_name
-            confidence = result.gestures[0][0].score
+            # Draw the hand annotations on the image.
+            image_rgb.flags.writeable = True
+            image = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
 
-            # Example of pressing keys with pyautogui based on recognized gesture
-            if recognized_gesture == "Thumb_Up":
-                pyautogui.press("space") #jump up
-            elif recognized_gesture == "Open_Palm":
-                pyautogui.press("e") #rotate clockwise
-            elif recognized_gesture == "Closed_Fist":
-                pyautogui.press("q") #rotate counterclockwise
-            elif recognized_gesture == "Victory":
-                pyautogui.press("down") #enter door
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    # Draw landmarks
+                    mp_drawing.draw_landmarks(
+                        image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-            # Display recognized gesture and confidence 
-            cv2.putText(image, f"Gesture: {recognized_gesture} ({confidence:.2f})", 
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                    gesture = custom_gestures.recognize_gesture(hand_landmarks)
 
-        # Display the resulting image (can comment this out for better performance later on)
-        cv2.imshow('Gesture Recognition', image)
+                    # Example of pressing keys with pyautogui based on recognized gesture
+                    if gesture == "left_finger":
+                        pyautogui.keyDown("a") #move left
+                    elif gesture == "right_finger":
+                        pyautogui.keyDown("d") #move left
+                    elif gesture == "left_and_jump":
+                        pyautogui.keyDown("a") #move left
+                        pyautogui.press("space") #jump
+                    elif gesture == "right_and_jump":
+                        pyautogui.keyDown("d") #move right
+                        pyautogui.press("space") #jump
+                    else:
+                        pyautogui.keyUp("d")
+                        pyautogui.keyUp("a")
+                        if gesture == "thumb_up":
+                            pyautogui.press("space") #jump up
+                        elif gesture == "open_palm":
+                            pyautogui.press("e") #rotate clockwise
+                        elif gesture == "okay":
+                            pyautogui.press("q") #rotate counterclockwise
+                        elif gesture == "peace":
+                            pyautogui.press("s") #enter door
 
-        if cv2.waitKey(5) & 0xFF == 27:
-            break
+            if cv2.waitKey(5) & 0xFF == 27:
+                break
 
     cap.release()
     cv2.destroyAllWindows()

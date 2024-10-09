@@ -73,7 +73,7 @@ def recognize_ok(hand_landmarks):
             return "Okay Gesture"
     return "Unknown"
 
-def recognize_left(hand_landmarks):
+def recognize_gesture(hand_landmarks):
     # Extract necessary landmarks
     thumb_tip = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP]
     index_tip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
@@ -147,9 +147,7 @@ def main():
                     mp_drawing.draw_landmarks(
                         image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-                    # Recognize gesture
-                    # gesture = recognize_palm(hand_landmarks)
-                    gesture = recognize_left(hand_landmarks)
+                    gesture = recognize_gesture(hand_landmarks)
                     
                     # Display gesture near hand location
                     cv2.putText(image, gesture, 
