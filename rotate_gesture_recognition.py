@@ -44,16 +44,16 @@ def main():
             confidence = result.gestures[0][0].score
 
             # Example of pressing keys with pyautogui based on recognized gesture
-            if recognized_gesture == "Thumb_Up":
-                pyautogui.press("w")
-            elif recognized_gesture == "Thumb_Down":
-                pyautogui.press("s")
-            elif recognized_gesture == "Open_Palm":
-                pyautogui.press("a")
-            elif recognized_gesture == "Closed_Fist":
-                pyautogui.press("d")
-            elif recognized_gesture == "Victory":
-                pyautogui.press("space")
+            while recognized_gesture == "Thumb_Up":
+                pyautogui.keyDown("w")
+            while recognized_gesture == "Thumb_Down":
+                pyautogui.keyDown("s")
+            while recognized_gesture == "Open_Palm":
+                pyautogui.keyDown("a")
+            while recognized_gesture == "Closed_Fist":
+                pyautogui.keyDown("d")
+            while recognized_gesture == "Victory":
+                pyautogui.keyDown("space")
 
             # Display recognized gesture and confidence 
             cv2.putText(image, f"Gesture: {recognized_gesture} ({confidence:.2f})", 
