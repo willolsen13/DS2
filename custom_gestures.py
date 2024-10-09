@@ -20,6 +20,12 @@ def recognize_palm(hand_landmarks):
     index_tip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
     index_mcp = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP]
 
+    ring_tip = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP]
+    ring_mcp = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP]
+
+    middle_tip = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP]
+    middle_mcp = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP]
+
     thumb_dist = calculate_distance(
         (thumb_tip.x, thumb_tip.y), 
         (thumb_mcp.x, thumb_mcp.y)
@@ -28,11 +34,22 @@ def recognize_palm(hand_landmarks):
         (index_tip.x, index_tip.y), 
         (index_mcp.x, index_mcp.y)
     )
+    ring_dist = calculate_distance(
+        (ring_tip.x, ring_tip.y), 
+        (ring_mcp.x, ring_mcp.y)
+    )
+    middle_dist = calculate_distance(
+        (middle_tip.x, middle_tip.y), 
+        (middle_mcp.x, middle_mcp.y)
+    )
 
-    if thumb_dist > 0.1 and index_dist > 0.1:
-        return "Open Palm"
+
+    if thumb_dist > 0.1 and index_dist > 0.1 and ring_dist > 0.1 and middle_dist > 0.1:
+        return "open_palm"
+    elif index_dist > 0.1 and middle_dist > 0.1:
+        return "peace"
     else:
-        return "Fist"
+        return "Unknown"
     
 def recognize_ok(hand_landmarks):
     # Extract necessary landmarks
@@ -55,6 +72,45 @@ def recognize_ok(hand_landmarks):
             pinky_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_PIP].y):
             return "Okay Gesture"
     return "Unknown"
+
+def recognize_left(hand_landmarks):
+    # Extract necessary landmarks
+    thumb_tip = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP]
+    index_tip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
+    middle_tip = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP]
+    ring_tip = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP]
+    pinky_tip = hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP]
+
+    # Calculate distance between thumb tip and non-index tips
+    distance_ring_pinky = calculate_distance(
+        (ring_tip.x, ring_tip.y), 
+        (pinky_tip.x, pinky_tip.y)
+    )
+    distance_middle_ring = calculate_distance(
+        (ring_tip.x, ring_tip.y), 
+        (middle_tip.x, middle_tip.y)
+    )
+
+    # Check if index is far to the left
+    if distance_ring_pinky < 0.1 and distance_middle_ring < 0.1:
+        if (index_tip.x < hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x - .1):
+            if (thumb_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y - .1 and
+                thumb_tip.x > hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].x + .05):
+                return "left_and_jump"
+            else:
+                return "left_finger"
+        if (index_tip.x > hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x + .15):
+            if (thumb_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y - .1 and
+                thumb_tip.x < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].x -.05):
+                return "right_and_jump"
+            else:
+                return "right_finger"
+        if (thumb_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y - .1):
+            return "thumb_up"
+    if (recognize_ok(hand_landmarks) == "Okay Gesture"):
+        return "okay"
+    return recognize_palm(hand_landmarks)
+
 
 def main():
     # Initialize video capture
@@ -93,7 +149,7 @@ def main():
 
                     # Recognize gesture
                     # gesture = recognize_palm(hand_landmarks)
-                    gesture = recognize_ok(hand_landmarks)
+                    gesture = recognize_left(hand_landmarks)
                     
                     # Display gesture near hand location
                     cv2.putText(image, gesture, 
