@@ -45,15 +45,13 @@ def main():
 
             # Example of pressing keys with pyautogui based on recognized gesture
             if recognized_gesture == "Thumb_Up":
-                pyautogui.press("w")
-            elif recognized_gesture == "Thumb_Down":
-                pyautogui.press("s")
+                pyautogui.press("space") #jump up
             elif recognized_gesture == "Open_Palm":
-                pyautogui.press("a")
+                pyautogui.press("e") #rotate clockwise
             elif recognized_gesture == "Closed_Fist":
-                pyautogui.press("d")
+                pyautogui.press("q") #rotate counterclockwise
             elif recognized_gesture == "Victory":
-                pyautogui.press("space")
+                pyautogui.press("down") #enter door
 
             # Display recognized gesture and confidence 
             cv2.putText(image, f"Gesture: {recognized_gesture} ({confidence:.2f})", 
