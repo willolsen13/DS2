@@ -26,6 +26,8 @@ def recognize_palm(hand_landmarks):
     middle_tip = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP]
     middle_mcp = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP]
 
+    pinky_tip = hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP]
+
     thumb_dist = calculate_distance(
         (thumb_tip.x, thumb_tip.y), 
         (thumb_mcp.x, thumb_mcp.y)
@@ -42,11 +44,15 @@ def recognize_palm(hand_landmarks):
         (middle_tip.x, middle_tip.y), 
         (middle_mcp.x, middle_mcp.y)
     )
+    distance_ring_pinky = calculate_distance(
+        (ring_tip.x, ring_tip.y), 
+        (pinky_tip.x, pinky_tip.y)
+    )
 
 
-    if thumb_dist > 0.1 and index_dist > 0.1 and ring_dist > 0.1 and middle_dist > 0.1:
+    if thumb_dist > 0.1 and index_dist > 0.1 and ring_dist > 0.05 and middle_dist > 0.05 and distance_ring_pinky > .05:
         return "open_palm"
-    elif index_dist > 0.1 and middle_dist > 0.1:
+    elif index_dist > 0.1 and middle_dist > 0.1 and distance_ring_pinky < .05:
         return "peace"
     else:
         return "Unknown"
@@ -91,15 +97,18 @@ def recognize_gesture(hand_landmarks):
         (middle_tip.x, middle_tip.y)
     )
 
+    if (recognize_ok(hand_landmarks) == "Okay Gesture"):
+        return "okay"
+
     # Check if index is far to the left
     if distance_ring_pinky < 0.1 and distance_middle_ring < 0.1:
-        if (index_tip.x < hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x - .1):
+        if (index_tip.x < hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x - .08):
             if (thumb_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y - .1 and
                 thumb_tip.x > hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].x + .05):
                 return "left_and_jump"
             else:
                 return "left_finger"
-        if (index_tip.x > hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x + .15):
+        if (index_tip.x > hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x + .11):
             if (thumb_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y - .1 and
                 thumb_tip.x < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].x -.05):
                 return "right_and_jump"
@@ -107,8 +116,6 @@ def recognize_gesture(hand_landmarks):
                 return "right_finger"
         if (thumb_tip.y < hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y - .1):
             return "thumb_up"
-    if (recognize_ok(hand_landmarks) == "Okay Gesture"):
-        return "okay"
     return recognize_palm(hand_landmarks)
 
 

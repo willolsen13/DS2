@@ -51,7 +51,10 @@ def main():
                     gesture = custom_gestures.recognize_gesture(hand_landmarks)
 
                     # Example of pressing keys with pyautogui based on recognized gesture
-                    if gesture == "left_finger":
+                    if gesture == "Unknown":
+                        pyautogui.keyUp("d")
+                        pyautogui.keyUp("a")
+                    elif gesture == "left_finger":
                         pyautogui.keyDown("a") #move left
                     elif gesture == "right_finger":
                         pyautogui.keyDown("d") #move left
